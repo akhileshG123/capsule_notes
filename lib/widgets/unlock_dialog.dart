@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import '../utils/theme.dart';
 
@@ -16,28 +17,63 @@ class UnlockDialog extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: AppTheme.cardCapsule,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppTheme.accent, width: 2), // Glowing effect
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppTheme.accent.withAlpha(60), width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.accent.withAlpha(20),
+                  blurRadius: 24,
+                  spreadRadius: 4,
+                ),
+              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.lock_open, size: 64, color: Colors.amber),
-                const SizedBox(height: 16),
-                Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                const SizedBox(height: 16),
-                Text(content, style: const TextStyle(fontSize: 16, color: Colors.white70), textAlign: TextAlign.center),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentSurface,
+                    shape: BoxShape.circle,
                   ),
-                  child: const Text('Awesome!', style: TextStyle(color: Colors.white)),
+                  child: const Icon(Icons.lock_open_rounded, size: 48, color: AppTheme.accent),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  content,
+                  style: GoogleFonts.outfit(
+                    fontSize: 15,
+                    color: AppTheme.textSecondary,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Awesome!',
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

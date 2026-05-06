@@ -31,7 +31,7 @@ class CapsuleNotesApp extends StatelessWidget {
     return MaterialApp(
       title: 'Capsule Notes',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       home: const SplashScreen(),
     );
   }

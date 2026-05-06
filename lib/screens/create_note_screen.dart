@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import '../providers/auth_provider.dart';
-import '../services/firestore_service.dart';
-// import '../models/note_model.dart';
-// import '../utils/theme.dart';
+import '../utils/theme.dart';
 
 class CreateNoteScreen extends StatefulWidget {
   const CreateNoteScreen({super.key});
@@ -17,8 +14,8 @@ class CreateNoteScreen extends StatefulWidget {
 class _CreateNoteScreenState extends State<CreateNoteScreen> {
   final _titleCtrl = TextEditingController();
   final _contentCtrl = TextEditingController();
-  final _firestore = FirestoreService();
   bool _isSaving = false;
+
   void _saveNote() async {
     if (_titleCtrl.text.isEmpty && _contentCtrl.text.isEmpty) {
       Navigator.pop(context);
@@ -45,12 +42,16 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
       });
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note saved!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Note saved!')),
+        );
       }
     } catch (e) {
       setState(() => _isSaving = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
       }
     }
   }
@@ -58,42 +59,98 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
+        title: Text(
+          'New Note',
+          style: GoogleFonts.outfit(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimary,
+          ),
+        ),
         actions: [
           if (_isSaving)
             const Padding(
               padding: EdgeInsets.only(right: 16.0),
-              child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.accent,
+                  ),
+                ),
+              ),
             )
           else
-            IconButton(
-              icon: const Icon(Icons.check),
-              onPressed: _saveNote,
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton.icon(
+                onPressed: _saveNote,
+                icon: const Icon(
+                  Icons.check_rounded,
+                  size: 18,
+                  color: AppTheme.accent,
+                ),
+                label: Text(
+                  'Save',
+                  style: GoogleFonts.outfit(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.accent,
+                  ),
+                ),
+              ),
             ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         child: Column(
           children: [
             TextField(
               controller: _titleCtrl,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-              decoration: const InputDecoration(
+              style: GoogleFonts.outfit(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
+              decoration: InputDecoration(
                 hintText: 'Title',
                 border: InputBorder.none,
-                hintStyle: TextStyle(color: Colors.grey),
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                filled: false,
+                hintStyle: GoogleFonts.outfit(
+                  color: AppTheme.textHint,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
+            const Divider(color: AppTheme.divider, height: 1),
+            const SizedBox(height: 12),
             Expanded(
               child: TextField(
                 controller: _contentCtrl,
                 maxLines: null,
-                style: const TextStyle(fontSize: 16, color: Colors.white70),
-                decoration: const InputDecoration(
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  color: AppTheme.textPrimary,
+                  height: 1.7,
+                ),
+                decoration: InputDecoration(
                   hintText: 'Note something down...',
                   border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.grey),
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  filled: false,
+                  hintStyle: GoogleFonts.outfit(
+                    color: AppTheme.textHint,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ),

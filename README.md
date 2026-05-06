@@ -33,48 +33,48 @@ The app is built with a **dark mode-first aesthetic**, staggered grid layouts, a
 
 ### 📱 Frontend — Flutter
 
-| Package | Purpose |
-|---|---|
-| `flutter` + `dart` | Core framework & language |
-| `firebase_core` | Firebase initialization |
-| `firebase_auth` | User authentication |
-| `cloud_firestore` | Real-time NoSQL database |
-| `firebase_storage` | Media file storage |
-| `firebase_messaging` | Push notifications (FCM) |
-| `google_sign_in` | Google OAuth authentication |
-| `flutter_sound` | Voice recording |
-| `image_picker` | Camera / gallery access |
-| `provider` | State management |
-| `http` | REST API calls to backend |
+| Package                         | Purpose                       |
+| ------------------------------- | ----------------------------- |
+| `flutter` + `dart`          | Core framework & language     |
+| `firebase_core`               | Firebase initialization       |
+| `firebase_auth`               | User authentication           |
+| `cloud_firestore`             | Real-time NoSQL database      |
+| `firebase_storage`            | Media file storage            |
+| `firebase_messaging`          | Push notifications (FCM)      |
+| `google_sign_in`              | Google OAuth authentication   |
+| `flutter_sound`               | Voice recording               |
+| `image_picker`                | Camera / gallery access       |
+| `provider`                    | State management              |
+| `http`                        | REST API calls to backend     |
 | `flutter_staggered_grid_view` | Masonry / staggered note grid |
-| `cached_network_image` | Efficient image loading |
-| `flutter_local_notifications` | Local capsule unlock alerts |
-| `lottie` | Animated illustrations |
-| `intl` | Date & time formatting |
-| `uuid` | Unique ID generation |
+| `cached_network_image`        | Efficient image loading       |
+| `flutter_local_notifications` | Local capsule unlock alerts   |
+| `lottie`                      | Animated illustrations        |
+| `intl`                        | Date & time formatting        |
+| `uuid`                        | Unique ID generation          |
 
 ### 🖥️ Backend — Node.js (Express)
 
-| Tech | Purpose |
-|---|---|
-| `express` | REST API server |
-| `firebase-admin` | Server-side Firebase SDK |
-| `@google-cloud/speech` | Voice-to-text transcription |
-| `@google-cloud/vision` | OCR for scanned documents |
-| `multer` | File upload handling |
-| `node-cron` | Scheduled jobs (capsule unlock) |
-| `dotenv` | Environment variable management |
+| Tech                     | Purpose                         |
+| ------------------------ | ------------------------------- |
+| `express`              | REST API server                 |
+| `firebase-admin`       | Server-side Firebase SDK        |
+| `@google-cloud/speech` | Voice-to-text transcription     |
+| `@google-cloud/vision` | OCR for scanned documents       |
+| `multer`               | File upload handling            |
+| `node-cron`            | Scheduled jobs (capsule unlock) |
+| `dotenv`               | Environment variable management |
 
 ### ☁️ Cloud & Infrastructure
 
-| Service | Role |
-|---|---|
-| **Firebase Auth** | Secure user authentication |
-| **Cloud Firestore** | Notes, capsule metadata storage |
-| **Firebase Storage** | Voice and image file storage |
-| **Firebase Cloud Messaging** | Push notifications |
-| **Google Cloud Speech-to-Text** | Voice note transcription |
-| **Google Cloud Vision API** | Document scanning / OCR |
+| Service                               | Role                            |
+| ------------------------------------- | ------------------------------- |
+| **Firebase Auth**               | Secure user authentication      |
+| **Cloud Firestore**             | Notes, capsule metadata storage |
+| **Firebase Storage**            | Voice and image file storage    |
+| **Firebase Cloud Messaging**    | Push notifications              |
+| **Google Cloud Speech-to-Text** | Voice note transcription        |
+| **Google Cloud Vision API**     | Document scanning / OCR         |
 
 ---
 
@@ -186,16 +186,16 @@ firebase deploy --only firestore:rules
 
 ## ✨ Key Features
 
-| Feature | Description |
-|---|---|
-| 🔐 Auth | Email/Password & Google Sign-In |
-| 📝 Rich Notes | Create and manage text notes |
-| 🎙️ Voice Notes | Record audio and transcribe to text |
-| 📷 Scan Notes | Capture documents and extract text via OCR |
-| ⏰ Time Capsules | Lock notes until a future date |
-| 🔔 Notifications | Get alerted when capsules unlock |
-| 🌙 Dark Mode | Sleek dark-mode-first design |
-| 📐 Staggered Grid | Pinterest-style note layout |
+| Feature           | Description                                |
+| ----------------- | ------------------------------------------ |
+| 🔐 Auth           | Email/Password & Google Sign-In            |
+| 📝 Rich Notes     | Create and manage text notes               |
+| 🎙️ Voice Notes  | Record audio and transcribe to text        |
+| 📷 Scan Notes     | Capture documents and extract text via OCR |
+| ⏰ Time Capsules  | Lock notes until a future date             |
+| 🔔 Notifications  | Get alerted when capsules unlock           |
+| 🌙 Dark Mode      | Sleek dark-mode-first design               |
+| 📐 Staggered Grid | Pinterest-style note layout                |
 
 ---
 
@@ -208,3 +208,23 @@ This project is licensed under the **MIT License**.
 <div align="center">
   <sub>Built with ❤️ using Flutter & Firebase</sub>
 </div>
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+  Execution failed for task ':app:processDebugGoogleServices'.
+
+> File google-services.json is missing.
+> The Google Services Plugin cannot function without it.
+> Searched locations: /home/akhilesh/flutter_projects/capsule_notes_app/android/app/src/debug/google-services.json, /home/akhilesh/flutter_projects/capsule_notes_app/android/app/src/debug/google-services.json, /home/akhilesh/flutter_projects/capsule_notes_app/android/app/src/google-services.json, /home/akhilesh/flutter_projects/capsule_notes_app/android/app/src/debug/google-services.json, /home/akhilesh/flutter_projects/capsule_notes_app/android/app/src/Debug/google-services.json, /home/akhilesh/flutter_projects/capsule_notes_app/android/app/google-services.json
+
+* Try:
+
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 56s
+Running Gradle task 'assembleDebug'...                             57.3s
+Error: Gradle task assembleDebug failed with exit code 1

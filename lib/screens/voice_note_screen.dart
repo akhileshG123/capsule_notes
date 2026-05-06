@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
-// import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:uuid/uuid.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-// import '../providers/auth_provider.dart';
 import '../services/storage_service.dart';
-import '../services/firestore_service.dart';
 import '../services/api_service.dart';
-// import '../models/voice_note_model.dart';
 import '../widgets/waveform_widget.dart';
 import '../utils/theme.dart';
 
@@ -29,7 +27,6 @@ class _VoiceNoteScreenState extends State<VoiceNoteScreen> {
   DateTime? _startTime;
 
   final _storage = StorageService();
-  final _firestore = FirestoreService();
   final _api = ApiService();
   bool _isProcessing = false;
 
@@ -40,13 +37,24 @@ class _VoiceNoteScreenState extends State<VoiceNoteScreen> {
   }
 
   Future<void> _initRecorder() async {
+    // Request microphone permission first
+    final status = await Permission.microphone.request();
+    if (!status.isGranted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Microphone permission is required to record voice notes.')),
+        );
+      }
+      return;
+    }
+
     await _recorder.openRecorder();
-    _isInit = true;
+    setState(() => _isInit = true);
   }
 
   Future<void> _startRecording() async {
     if (!_isInit) return;
-    
+
     final tempDir = await getTemporaryDirectory();
     final id = const Uuid().v4();
     _filePath = '${tempDir.path}/$id.m4a';
@@ -65,13 +73,21 @@ class _VoiceNoteScreenState extends State<VoiceNoteScreen> {
     if (!_isRecording) return;
     await _recorder.stopRecorder();
     setState(() => _isRecording = false);
-    
+
     final duration = DateTime.now().difference(_startTime!).inSeconds.toDouble();
     if (duration < 1.0) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Recording too short')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Recording too short')),
+        );
+      }
       return;
     }
+
+    // Actually upload and transcribe the recording
+    await _uploadAndTranscribe(duration);
   }
+
   Future<void> _uploadAndTranscribe(double duration) async {
     setState(() => _isProcessing = true);
     final user = FirebaseAuth.instance.currentUser;
@@ -96,7 +112,9 @@ class _VoiceNoteScreenState extends State<VoiceNoteScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Processing voice note in background...')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Processing voice note in background...')),
+        );
       }
 
       // Upload to Storage
@@ -105,7 +123,7 @@ class _VoiceNoteScreenState extends State<VoiceNoteScreen> {
         await FirebaseFirestore.instance.collection('voice_notes').doc(noteId).update({
           'audioUrl': audioUrl,
         });
-        
+
         // Call Backend STT
         final success = await _api.transcribeAudio(noteId, user.uid, audioUrl);
         if (success) {
@@ -135,7 +153,16 @@ class _VoiceNoteScreenState extends State<VoiceNoteScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('New Voice Note')),
+      appBar: AppBar(
+        title: Text(
+          'New Voice Note',
+          style: GoogleFonts.outfit(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -143,31 +170,90 @@ class _VoiceNoteScreenState extends State<VoiceNoteScreen> {
             if (_isRecording) const WaveformWidget(),
             const SizedBox(height: 60),
             if (_isProcessing)
-              const CircularProgressIndicator()
+              Column(
+                children: [
+                  const CircularProgressIndicator(color: AppTheme.accent),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Saving and processing audio...',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              )
             else
               GestureDetector(
                 onLongPress: _startRecording,
                 onLongPressUp: _stopRecording,
-                child: Container(
-                  width: 100,
-                  height: 100,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: _isRecording ? 110 : 100,
+                  height: _isRecording ? 110 : 100,
                   decoration: BoxDecoration(
-                    color: _isRecording ? Colors.red : AppTheme.accent,
+                    gradient: _isRecording
+                        ? const LinearGradient(
+                            colors: [Color(0xFFE85B5B), Color(0xFFD44545)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : const LinearGradient(
+                            colors: [AppTheme.accent, AppTheme.accentLight],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                     shape: BoxShape.circle,
-                    boxShadow: _isRecording 
-                        ? [BoxShadow(color: Colors.red.withOpacity(0.5), blurRadius: 20, spreadRadius: 5)]
-                        : [],
+                    boxShadow: [
+                      BoxShadow(
+                        color: _isRecording
+                            ? const Color(0xFFE85B5B).withAlpha(80)
+                            : AppTheme.accent.withAlpha(60),
+                        blurRadius: _isRecording ? 30 : 16,
+                        spreadRadius: _isRecording ? 4 : 0,
+                      ),
+                    ],
                   ),
-                  child: const Icon(Icons.mic, size: 50, color: Colors.white),
+                  child: const Icon(Icons.mic_rounded, size: 44, color: Colors.white),
                 ),
               ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
             Text(
-              _isProcessing 
-                  ? 'Saving and processing audio...' 
-                  : _isRecording ? 'Release to stop and save' : 'Hold to record',
-              style: const TextStyle(color: Colors.white70, fontSize: 16),
+              _isProcessing
+                  ? ''
+                  : _isRecording
+                      ? 'Release to stop and save'
+                      : 'Hold to record',
+              style: GoogleFonts.outfit(
+                color: AppTheme.textSecondary,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
             ),
+            if (!_isInit && !_isProcessing) ...[
+              const SizedBox(height: 20),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 40),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.error.withAlpha(15),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppTheme.error.withAlpha(30)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, color: AppTheme.error, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Microphone permission is needed',
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          color: AppTheme.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),

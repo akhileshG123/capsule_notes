@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 class StorageService {
@@ -10,7 +11,7 @@ class StorageService {
       final uploadTask = await ref.putFile(audioFile);
       return await uploadTask.ref.getDownloadURL();
     } catch (e) {
-      print('Upload voice note error: $e');
+      debugPrint('Upload voice note error: $e');
       return null;
     }
   }
@@ -21,7 +22,7 @@ class StorageService {
       final uploadTask = await ref.putFile(imageFile);
       return await uploadTask.ref.getDownloadURL();
     } catch (e) {
-      print('Upload scanned image error: $e');
+      debugPrint('Upload scanned image error: $e');
       return null;
     }
   }

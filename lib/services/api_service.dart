@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -39,7 +40,7 @@ class ApiService {
       }
       return false;
     } catch (e) {
-      print('Transcribe API Error: $e');
+      debugPrint('Transcribe API Error: $e');
       return false;
     }
   }
@@ -68,7 +69,7 @@ class ApiService {
       }
       return false;
     } catch (e) {
-      print('Extract API Error: $e');
+      debugPrint('Extract API Error: $e');
       return false;
     }
   }

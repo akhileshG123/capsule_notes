@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
 import '../providers/auth_provider.dart';
@@ -13,6 +14,7 @@ import 'create_note_screen.dart';
 import 'voice_note_screen.dart';
 import 'scan_note_screen.dart';
 import 'capsule_note_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -54,44 +56,76 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showCreateOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.background,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: AppTheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) => Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.text_fields, color: Colors.white),
-              title: const Text('Text Note'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateNoteScreen()));
-              },
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-            ListTile(
-              leading: const Icon(Icons.mic, color: AppTheme.cardVoice),
-              title: const Text('Voice Note'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const VoiceNoteScreen()));
-              },
+            const SizedBox(height: 20),
+            Text(
+              'Create New Note',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-            ListTile(
-              leading: const Icon(Icons.document_scanner, color: AppTheme.cardScanned),
-              title: const Text('Scan Document'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const ScanNoteScreen()));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.lock_clock, color: AppTheme.accent),
-              title: const Text('Time Capsule'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const CapsuleNoteScreen()));
-              },
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                _CreateOptionTile(
+                  icon: Icons.text_fields_rounded,
+                  label: 'Text',
+                  color: AppTheme.cardText,
+                  iconColor: AppTheme.accent,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateNoteScreen()));
+                  },
+                ),
+                const SizedBox(width: 12),
+                _CreateOptionTile(
+                  icon: Icons.mic_rounded,
+                  label: 'Voice',
+                  color: AppTheme.cardVoice,
+                  iconColor: const Color(0xFF4A8CAF),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const VoiceNoteScreen()));
+                  },
+                ),
+                const SizedBox(width: 12),
+                _CreateOptionTile(
+                  icon: Icons.document_scanner_rounded,
+                  label: 'Scan',
+                  color: AppTheme.cardScanned,
+                  iconColor: const Color(0xFFC47B4A),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ScanNoteScreen()));
+                  },
+                ),
+                const SizedBox(width: 12),
+                _CreateOptionTile(
+                  icon: Icons.lock_clock_rounded,
+                  label: 'Capsule',
+                  color: AppTheme.cardCapsule,
+                  iconColor: const Color(0xFF7B5DAF),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const CapsuleNoteScreen()));
+                  },
+                ),
+              ],
             ),
           ],
         ),
@@ -104,80 +138,223 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = context.watch<AppAuthProvider>().user;
     if (user == null) return const Scaffold();
 
+    final firstName = (user.displayName ?? 'there').split(' ').first;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('CapsuleNotes'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => context.read<AppAuthProvider>().signOut(),
-          ),
-        ],
+      appBar: _currentIndex == 0
+          ? AppBar(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hello, $firstName 👋',
+                    style: GoogleFonts.outfit(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Capture your thoughts',
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              toolbarHeight: 68,
+            )
+          : AppBar(
+              title: Text(
+                'Profile',
+                style: GoogleFonts.outfit(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ),
+      body: _currentIndex == 0 ? _buildNotesBody(user.uid) : const ProfileScreen(),
+      floatingActionButton: _currentIndex == 0
+          ? FloatingActionButton(
+              onPressed: _showCreateOptions,
+              elevation: 4,
+              child: const Icon(Icons.add_rounded, size: 30),
+            )
+          : null,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(12),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (i) => setState(() => _currentIndex = i),
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_rounded),
+              activeIcon: Icon(Icons.home_rounded),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline_rounded),
+              activeIcon: Icon(Icons.person_rounded),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
-      body: StreamBuilder<List<Widget>>(
-        stream: _getMixedNotesStream(user.uid),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            debugPrint('Firestore error: ${snapshot.error}');
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text('Something went wrong', style: TextStyle(color: Colors.white, fontSize: 18)),
-                  const SizedBox(height: 8),
-                  Text('Please try again later', style: TextStyle(color: Colors.grey[400])),
-                ],
-              ),
-            );
-          }
+    );
+  }
 
-          final widgets = snapshot.data ?? [];
-          if (widgets.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.note_add, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text('No notes yet', style: TextStyle(color: Colors.white, fontSize: 18)),
-                  const SizedBox(height: 8),
-                  Text('Tap + to create your first note', style: TextStyle(color: Colors.grey[400])),
-                ],
-              ),
-            );
-          }
-
-          return MasonryGridView.count(
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            padding: const EdgeInsets.all(12),
-            itemCount: widgets.length,
-            itemBuilder: (context, index) {
-              return widgets[index];
-            },
+  Widget _buildNotesBody(String userId) {
+    return StreamBuilder<List<Widget>>(
+      stream: _getMixedNotesStream(userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppTheme.accent),
           );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showCreateOptions,
-        child: const Icon(Icons.add, size: 32),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
+        }
+        if (snapshot.hasError) {
+          debugPrint('Firestore error: ${snapshot.error}');
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.error.withAlpha(20),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.error_outline_rounded, size: 48, color: AppTheme.error),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Something went wrong',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Please try again later',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          );
+        }
+
+        final widgets = snapshot.data ?? [];
+        if (widgets.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentSurface,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.note_add_rounded, size: 48, color: AppTheme.accent),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'No notes yet',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Tap + to create your first note',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          );
+        }
+
+        return MasonryGridView.count(
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          padding: const EdgeInsets.all(16),
+          itemCount: widgets.length,
+          itemBuilder: (context, index) {
+            return widgets[index];
+          },
+        );
+      },
     );
   }
 }
 
+// ── Create Option Tile ──────────────────────────────────────────
+class _CreateOptionTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  const _CreateOptionTile({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.iconColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTheme.divider),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: iconColor.withAlpha(30),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: GoogleFonts.outfit(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

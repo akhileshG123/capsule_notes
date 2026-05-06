@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,16 +9,25 @@ class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  bool _googleInitialized = false;
+
   Stream<User?> get user => _auth.authStateChanges();
+
+  Future<void> _ensureGoogleInitialized() async {
+    if (!_googleInitialized) {
+      await _googleSignIn.initialize();
+      _googleInitialized = true;
+    }
+  }
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
-      if (googleUser == null) return null;
+      await _ensureGoogleInitialized();
 
-      final GoogleSignInAuthentication googleAuth =  googleUser.authentication;
+      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
-        // accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
@@ -25,7 +35,7 @@ class AuthService {
       await _createUserDocumentIfNeeded(userCredential.user!);
       return userCredential;
     } catch (e) {
-      print('Google sign in error: $e');
+      debugPrint('Google sign in error: $e');
       return null;
     }
   }
@@ -49,7 +59,7 @@ class AuthService {
       await _firestore.collection('users').doc(newUser.uid).set(newUser.toMap());
       return userCredential;
     } catch (e) {
-      print('Register error: $e');
+      debugPrint('Register error: $e');
       return null;
     }
   }
@@ -58,13 +68,18 @@ class AuthService {
     try {
       return await _auth.signInWithEmailAndPassword(email: email, password: password);
     } catch (e) {
-      print('Login error: $e');
+      debugPrint('Login error: $e');
       return null;
     }
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
+    try {
+      await _ensureGoogleInitialized();
+      await _googleSignIn.signOut();
+    } catch (_) {
+      // Google sign out may fail if never initialized; ignore.
+    }
     await _auth.signOut();
   }
 

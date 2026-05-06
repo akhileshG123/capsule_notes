@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
+import '../utils/theme.dart';
 
 class CountdownWidget extends StatefulWidget {
   final DateTime unlockAt;
@@ -40,10 +42,23 @@ class _CountdownWidgetState extends State<CountdownWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_timeLeft == Duration.zero) return const Text('Unlocked!', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold));
+    if (_timeLeft == Duration.zero) {
+      return Text(
+        'Unlocked!',
+        style: GoogleFonts.outfit(
+          color: AppTheme.accent,
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+        ),
+      );
+    }
     return Text(
       '${_timeLeft.inDays}d ${_timeLeft.inHours % 24}h ${_timeLeft.inMinutes % 60}m',
-      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      style: GoogleFonts.outfit(
+        color: const Color(0xFF7B5DAF),
+        fontWeight: FontWeight.w600,
+        fontSize: 13,
+      ),
     );
   }
 }

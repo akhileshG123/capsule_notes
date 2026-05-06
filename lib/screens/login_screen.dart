@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/theme.dart';
@@ -16,20 +17,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
 
   void _login() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final auth = context.read<AppAuthProvider>();
     await auth.loginWithEmail(_emailCtrl.text.trim(), _passCtrl.text);
-    
+
     if (auth.isAuthenticated && mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen())
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login failed. Check credentials.'))
+        const SnackBar(content: Text('Login failed. Check credentials.')),
       );
     }
   }
@@ -37,14 +39,14 @@ class _LoginScreenState extends State<LoginScreen> {
   void _googleSignIn() async {
     final auth = context.read<AppAuthProvider>();
     await auth.signInWithGoogle();
-    
+
     if (auth.isAuthenticated && mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen())
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Google Sign-In failed.'))
+        const SnackBar(content: Text('Google Sign-In failed.')),
       );
     }
   }
@@ -52,89 +54,169 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AppAuthProvider>();
-    
+
     return Scaffold(
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 28),
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.rocket_launch, size: 80, color: AppTheme.accent),
-                  const SizedBox(height: 24),
-                  const Text('Welcome Back', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  const Text('Log in to CapsuleNotes', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                  // Logo
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentSurface,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.edit_note_rounded,
+                      size: 48,
+                      color: AppTheme.accent,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    'Welcome Back',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Log in to CapsuleNotes',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                   const SizedBox(height: 40),
+
+                  // Email field
                   TextFormField(
                     controller: _emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      color: AppTheme.textPrimary,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Email',
-                      filled: true,
-                      fillColor: AppTheme.cardText,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                      prefixIcon: const Icon(Icons.email, color: Colors.grey),
+                      prefixIcon: const Icon(Icons.email_outlined, color: AppTheme.textHint, size: 20),
                     ),
                     validator: (v) => v!.isEmpty ? 'Enter email' : null,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
+
+                  // Password field
                   TextFormField(
                     controller: _passCtrl,
-                    obscureText: true,
+                    obscureText: _obscurePassword,
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      color: AppTheme.textPrimary,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Password',
-                      filled: true,
-                      fillColor: AppTheme.cardText,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                      prefixIcon: const Icon(Icons.lock, color: Colors.grey),
+                      prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppTheme.textHint, size: 20),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          color: AppTheme.textHint,
+                          size: 20,
+                        ),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      ),
                     ),
                     validator: (v) => v!.isEmpty ? 'Enter password' : null,
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 28),
+
+                  // Login button
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 54,
                     child: ElevatedButton(
                       onPressed: auth.isLoading ? null : _login,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.accent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: auth.isLoading 
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Login', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: auth.isLoading
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : Text(
+                              'Login',
+                              style: GoogleFonts.outfit(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
+
+                  // Divider
+                  Row(
+                    children: [
+                      const Expanded(child: Divider(color: AppTheme.divider)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'or',
+                          style: GoogleFonts.outfit(
+                            color: AppTheme.textHint,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      const Expanded(child: Divider(color: AppTheme.divider)),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Google sign-in button
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 54,
                     child: OutlinedButton.icon(
                       onPressed: auth.isLoading ? null : _googleSignIn,
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        side: const BorderSide(color: Colors.grey),
+                      icon: const Icon(Icons.g_mobiledata, size: 28),
+                      label: Text(
+                        'Sign in with Google',
+                        style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w500),
                       ),
-                      icon: const Icon(Icons.g_mobiledata, size: 32, color: Colors.white),
-                      label: const Text('Sign in with Google', style: TextStyle(fontSize: 16, color: Colors.white)),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 28),
+
+                  // Sign up link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account?", style: TextStyle(color: Colors.grey)),
+                      Text(
+                        "Don't have an account?",
+                        style: GoogleFonts.outfit(
+                          color: AppTheme.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
                       TextButton(
                         onPressed: () {
                           Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen()));
                         },
-                        child: const Text('Sign Up', style: TextStyle(color: AppTheme.accent, fontWeight: FontWeight.bold)),
-                      )
+                        child: Text(
+                          'Sign Up',
+                          style: GoogleFonts.outfit(
+                            color: AppTheme.accent,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),

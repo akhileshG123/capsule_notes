@@ -12,6 +12,11 @@ class AppAuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _user != null;
 
   AppAuthProvider() {
+    // Synchronously set user from cached Firebase state so that
+    // isAuthenticated is immediately correct on app restart.
+    _user = FirebaseAuth.instance.currentUser;
+
+    // Also listen for future auth changes (login / logout / token refresh).
     _authService.user.listen((User? user) {
       _user = user;
       notifyListeners();
@@ -22,6 +27,7 @@ class AppAuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     await _authService.signInWithGoogle();
+    _user = FirebaseAuth.instance.currentUser;
     _isLoading = false;
     notifyListeners();
   }
@@ -30,6 +36,7 @@ class AppAuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     await _authService.loginWithEmail(email, password);
+    _user = FirebaseAuth.instance.currentUser;
     _isLoading = false;
     notifyListeners();
   }
@@ -38,11 +45,14 @@ class AppAuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     await _authService.registerWithEmail(email, password, name);
+    _user = FirebaseAuth.instance.currentUser;
     _isLoading = false;
     notifyListeners();
   }
 
   Future<void> signOut() async {
     await _authService.signOut();
+    _user = null;
+    notifyListeners();
   }
 }

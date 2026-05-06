@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 import '../models/capsule_note_model.dart';
 import '../utils/theme.dart';
 import 'countdown_widget.dart';
+import '../screens/note_detail_screen.dart';
 
 class CapsuleCard extends StatelessWidget {
   final CapsuleNoteModel note;
@@ -12,21 +14,34 @@ class CapsuleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isLocked = !note.isUnlocked;
 
-    return Card(
-      color: AppTheme.cardCapsule,
-      elevation: isLocked ? 8 : 4,
-      shadowColor: isLocked ? AppTheme.accent.withOpacity(0.5) : Colors.black,
-      shape: RoundedRectangleBorder(
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardCapsule,
         borderRadius: BorderRadius.circular(16),
-        side: isLocked ? const BorderSide(color: AppTheme.accent, width: 2) : BorderSide.none,
+        border: Border.all(
+          color: isLocked ? const Color(0xFF7B5DAF).withAlpha(60) : AppTheme.divider,
+          width: isLocked ? 1.5 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isLocked
+                ? const Color(0xFF7B5DAF).withAlpha(20)
+                : AppTheme.shadow,
+            blurRadius: isLocked ? 12 : 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: InkWell(
         onTap: () {
-          // Open Capsule Note Details
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => NoteDetailScreen(capsuleNote: note)),
+          );
         },
         borderRadius: BorderRadius.circular(16),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(15),
           child: Stack(
             children: [
               Padding(
@@ -40,27 +55,32 @@ class CapsuleCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             note.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                              color: AppTheme.textPrimary,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Text(note.coverEmoji, style: const TextStyle(fontSize: 24)),
+                        Text(note.coverEmoji, style: const TextStyle(fontSize: 22)),
                       ],
                     ),
                     const SizedBox(height: 8),
                     if (!isLocked)
                       Text(
                         note.content,
-                        style: const TextStyle(color: Colors.white70),
+                        style: GoogleFonts.outfit(
+                          color: AppTheme.textSecondary,
+                          fontSize: 13,
+                          height: 1.5,
+                        ),
                         maxLines: 4,
                         overflow: TextOverflow.ellipsis,
                       )
                     else
-                      Container(
-                        height: 80, // Space for blur
-                        width: double.infinity,
-                      )
+                      const SizedBox(height: 80),
                   ],
                 ),
               ),
@@ -68,14 +88,25 @@ class CapsuleCard extends StatelessWidget {
                 Positioned.fill(
                   child: ClipRect(
                     child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                      filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
                       child: Container(
-                        color: Colors.black.withOpacity(0.3),
+                        color: AppTheme.cardCapsule.withAlpha(180),
                         child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.lock, color: Colors.white, size: 32),
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF7B5DAF).withAlpha(20),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.lock_rounded,
+                                  color: Color(0xFF7B5DAF),
+                                  size: 24,
+                                ),
+                              ),
                               const SizedBox(height: 8),
                               CountdownWidget(unlockAt: note.unlockAt),
                             ],

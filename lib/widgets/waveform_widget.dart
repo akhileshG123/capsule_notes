@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/theme.dart';
 
 class WaveformWidget extends StatelessWidget {
   const WaveformWidget({super.key});
@@ -52,11 +53,18 @@ class _WaveBarState extends State<_WaveBar> with SingleTickerProviderStateMixin 
       builder: (context, child) {
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 2),
-          width: 8,
-          height: 20 + (_controller.value * 60),
+          width: 6,
+          height: 16 + (_controller.value * 50),
           decoration: BoxDecoration(
-            color: Colors.redAccent,
-            borderRadius: BorderRadius.circular(4),
+            gradient: LinearGradient(
+              colors: [
+                AppTheme.accent,
+                AppTheme.accentLight,
+              ],
+              begin: Alignment.bottomCenter,
+              end: Alignment.topCenter,
+            ),
+            borderRadius: BorderRadius.circular(3),
           ),
         );
       },
