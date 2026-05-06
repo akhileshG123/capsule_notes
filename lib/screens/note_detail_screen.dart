@@ -34,6 +34,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
   late TextEditingController _titleCtrl;
   late TextEditingController _contentCtrl;
+  late TextEditingController _userNotesCtrl;
 
   // ── helpers ──────────────────────────────────────────────────
   String get _noteType {
@@ -152,22 +153,36 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     return DateTime.now();
   }
 
+  /// Runtime check: is capsule truly unlocked?
+  bool get _isCapsuleLocked {
+    if (_noteType != 'capsule') return false;
+    return DateTime.now().isBefore(widget.capsuleNote!.unlockAt);
+  }
+
+  /// Can the user edit this note? (capsule must be unlocked)
+  bool get _canEdit => !_isCapsuleLocked;
+
   @override
   void initState() {
     super.initState();
     _titleCtrl = TextEditingController(text: _title);
     _contentCtrl = TextEditingController(text: _content);
+    _userNotesCtrl = TextEditingController(
+      text: (_noteType == 'scanned') ? (widget.scannedNote!.userNotes) : '',
+    );
   }
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _contentCtrl.dispose();
+    _userNotesCtrl.dispose();
     super.dispose();
   }
 
   // ── Edit ─────────────────────────────────────────────────────
   void _startEditing() {
+    if (!_canEdit) return;
     setState(() => _isEditing = true);
   }
 
@@ -183,6 +198,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       };
       if (_noteType == 'text') {
         updates['updatedAt'] = Timestamp.now();
+      }
+      if (_noteType == 'scanned') {
+        updates['userNotes'] = _userNotesCtrl.text.trim();
       }
       await FirebaseFirestore.instance
           .collection(_collectionName)
@@ -267,6 +285,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   // ── UI ───────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    // Safety: if a locked capsule somehow reached here, show locked state
+    if (_isCapsuleLocked) {
+      return _buildLockedView(context);
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -324,24 +347,25 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 if (value == 'delete') _confirmDelete();
               },
               itemBuilder: (_) => [
-                PopupMenuItem(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit_rounded,
-                          size: 20, color: AppTheme.accent),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Edit',
-                        style: GoogleFonts.outfit(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.textPrimary,
+                if (_canEdit)
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_rounded,
+                            size: 20, color: AppTheme.accent),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Edit',
+                          style: GoogleFonts.outfit(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.textPrimary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
                 PopupMenuItem(
                   value: 'delete',
                   child: Row(
@@ -508,16 +532,15 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.capsuleNote!.isUnlocked
-                                ? 'Unlocked'
-                                : 'Locked',
+                            'Unlocked ✨',
                             style: GoogleFonts.outfit(
                               fontSize: 12,
-                              color: AppTheme.textSecondary,
+                              color: const Color(0xFF7B5DAF),
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
-                            'Unlocks ${_formatDate(widget.capsuleNote!.unlockAt)}',
+                            'Opened ${_formatDate(widget.capsuleNote!.unlockAt)}',
                             style: GoogleFonts.outfit(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -527,11 +550,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                         ],
                       ),
                     ),
-                    Icon(
-                      widget.capsuleNote!.isUnlocked
-                          ? Icons.lock_open_rounded
-                          : Icons.lock_rounded,
-                      color: const Color(0xFF7B5DAF),
+                    const Icon(
+                      Icons.lock_open_rounded,
+                      color: Color(0xFF7B5DAF),
                       size: 22,
                     ),
                   ],
@@ -609,8 +630,142 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 ),
               ),
 
+            // ── User notes for scanned notes ──────────────
+            if (_noteType == 'scanned') ...[
+              const SizedBox(height: 20),
+              const Divider(color: AppTheme.divider, height: 1),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(Icons.note_alt_rounded, size: 16, color: _typeColor),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Your Notes',
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: _typeColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (_isEditing)
+                TextField(
+                  controller: _userNotesCtrl,
+                  maxLines: null,
+                  minLines: 4,
+                  style: GoogleFonts.outfit(
+                    fontSize: 15,
+                    color: AppTheme.textPrimary,
+                    height: 1.7,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Add your notes about this document...',
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
+                    hintStyle: GoogleFonts.outfit(
+                      color: AppTheme.textHint,
+                      fontSize: 15,
+                    ),
+                  ),
+                )
+              else
+                Text(
+                  widget.scannedNote!.userNotes.isNotEmpty
+                      ? widget.scannedNote!.userNotes
+                      : 'No additional notes',
+                  style: GoogleFonts.outfit(
+                    fontSize: 15,
+                    color: widget.scannedNote!.userNotes.isNotEmpty
+                        ? AppTheme.textSecondary
+                        : AppTheme.textHint,
+                    height: 1.7,
+                    fontStyle: widget.scannedNote!.userNotes.isEmpty
+                        ? FontStyle.italic
+                        : FontStyle.normal,
+                  ),
+                ),
+            ],
+
             const SizedBox(height: 40),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Shown if a locked capsule somehow reaches this screen (safety net)
+  Widget _buildLockedView(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        title: Text(
+          'Capsule Note',
+          style: GoogleFonts.outfit(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF7B5DAF).withAlpha(20),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock_rounded,
+                  color: Color(0xFF7B5DAF),
+                  size: 56,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'This capsule is still locked',
+                style: GoogleFonts.outfit(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Come back on ${_formatDate(widget.capsuleNote!.unlockAt)} to reveal the surprise!',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 15,
+                  color: AppTheme.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: Text(
+                    'Go Back',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -8,6 +8,7 @@ class ScannedNoteModel {
   final String imageUrl;
   final DateTime createdAt;
   final bool isProcessed;
+  final String userNotes;
 
   ScannedNoteModel({
     this.id,
@@ -17,6 +18,7 @@ class ScannedNoteModel {
     required this.imageUrl,
     required this.createdAt,
     this.isProcessed = false,
+    this.userNotes = '',
   });
 
   factory ScannedNoteModel.fromMap(Map<String, dynamic> map, String documentId) {
@@ -28,6 +30,7 @@ class ScannedNoteModel {
       imageUrl: map['imageUrl'] ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isProcessed: map['isProcessed'] ?? false,
+      userNotes: map['userNotes'] ?? '',
     );
   }
 
@@ -39,6 +42,7 @@ class ScannedNoteModel {
       'imageUrl': imageUrl,
       'createdAt': Timestamp.fromDate(createdAt),
       'isProcessed': isProcessed,
+      'userNotes': userNotes,
     };
   }
 }
